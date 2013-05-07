@@ -5,8 +5,10 @@ use warnings;
 use strict;
 use v5.14.2;
 
+use Term::ProgressBar;
+
 use PDL;
-use PDL::Sparse;
+use PDL::IO::FastRaw;
 use Inline qw( PDLPP );
 
 use lib './lib';
@@ -14,45 +16,46 @@ use lib './lib';
 use Tools;
 
 set_autopthread_targ(4);
-set_autopthread_size(1);
+set_autopthread_size(5);
 
 my $conf = require 'conf.pl';
 my $beta = $conf->{beta} || 0.6;
 
-my $DT = read_from_dir PDL::Sparse("$conf->{data_path}/document-term-model");
+my $DT = mapfraw("$conf->{data_path}/document-term-model", { ReadOnly => 1 });
 my ($words_count, $docs_count) = $DT->dims;
 
-say $words_count;
-say $docs_count;
+my $TT = mapfraw("$conf->{data_path}/term-term-model", { Creat => 1, Dims => [$words_count, $words_count], Datatype => 6 });
 
-exit 0;
+my $progress = new Term::ProgressBar({
+  count => $words_count,
+  ETA   => 'linear',
+});
 
-my $TT = mapfraw("$conf->{data_path}/term-term-model");
+$progress->max_update_rate(1);
+my $next_update = 0;
 
 for my $i ( 0 .. $words_count - 1 ) {
-  for my $j ( 0 .. $words_count - 1  ) {
-    my $col_i = $DT->slice("($i),:");
-    my $col_j = $DT->slice("($j),:");
-    if( $i == $j ) {
-      $TT->set($i, $j, 1 + $beta);
-    } else {
-      $TT->set($i, $j, $col_i->fuzzy_and($col_j)->sum() / ($col_i->sum() + $beta));
-    }
-  }
+  my $term = $DT->slice("($i),:");
+  $TT->slice("($i),:") .= $DT->fuzzy_and($term)->xchg(0,1)->sumover / ( $term->sum + $beta );
+  $next_update = $progress->update($i + 1) if $i + 1 > $next_update;
 }
+
+$progress->update($words_count) if $words_count >= $next_update;
 
 __DATA__
 
 __PDLPP__
 
 pp_def('fuzzy_and',
-  Pars => 'a(n); b(n); [o]c(n);',
+  Pars => 'a(n,m); b(m); [o]c(n,m);',
   Code => 'loop(n) %{
-    if( $a() < $b() ) {
-      $c() = $a();
-    } else {
-      $c() = $b();
-    }
+    loop(m) %{
+      if( $a() < $b() ) {
+        $c() = $a();
+      } else {
+        $c() = $b();
+      }
+    %}
   %}'
 );
 

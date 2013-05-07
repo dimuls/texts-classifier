@@ -6,13 +6,12 @@ use strict;
 use v5.14.2;
 
 use PDL;
-use PDL::Sparse;
+use PDL::IO::FastRaw;
 
 use lib './lib';
 use Tools;
 
 my $conf = require 'conf.pl';
-my $DT_data_path = "$conf->{data_path}/document-term-model";
 
 my ($docs, $words, $words_ids) = load_data($conf->{processed_docs_path}, $conf->{docs_limit});
 
@@ -20,7 +19,7 @@ my $words_count = scalar keys %$words;
 my $docs_count = scalar keys %$docs;
 
 # Init zero document-term similarity matrix
-my $DT = new PDL::Sparse($words_count, $docs_count);
+my $DT = mapfraw("$conf->{data_path}/document-term-model", { Creat => 1, Dims => [$words_count, $docs_count], Datatype => 6 });
 
 # Rows correspond to documents, columns to terms
 #   T1 T2 .. Tn
@@ -38,5 +37,3 @@ for my $doc ( values %$docs ) {
     );
   } 
 }
-
-$DT->write_to_dir($DT_data_path);
