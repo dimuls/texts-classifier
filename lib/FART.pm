@@ -16,9 +16,9 @@ sub new(@) {
   my ($class, %opt) = @_;
   return $class if ref $class;
 
-  die "ART: beta parameter needed" unless defined $opt{beta};
-  die "ART: lambda paramater needed" unless defined $opt{lambda};
-  die "ART: rho paramter needed" unless defined $opt{rho};
+  die "FART: beta parameter needed" unless defined $opt{beta};
+  die "FART: lambda paramater needed" unless defined $opt{lambda};
+  die "FART: rho paramter needed" unless defined $opt{rho};
 
   my $self = {
       beta => $opt{beta},

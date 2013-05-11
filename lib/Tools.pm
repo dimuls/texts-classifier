@@ -12,12 +12,13 @@ our @EXPORT = qw(
 
 use File::Slurp;
 
-sub load_processed_docs($;$) {
-  my ( $path, $limit ) = @_;
+sub load_processed_docs($;$$) {
+  my ( $path, $limit, $with_words ) = @_;
   my $pdocs = {};
   opendir(my $dh, $path) || die "Can't open docs path $path";
   my $id = 0;
-  while(readdir $dh) {
+  while( readdir $dh ) {
+    my $doc_name = $_;
     last if defined $limit and $id == $limit;
     next if /^\.+/;
     my $words = {};
@@ -30,19 +31,24 @@ sub load_processed_docs($;$) {
       }
     }
     close FILE;
-    $pdocs->{$id} = {
-                id => $id,
-              name => $_,
-             words => $words,
-       words_count => $words_count,
-    } and $id++ if $words_count;
+    if( $words_count ) {
+      $pdocs->{$id} = {
+          id => $id,
+        name => $doc_name,
+      };
+      if( $with_words ) {
+        $pdocs->{words} = $words;
+        $pdocs->{words_count} = $words_count;
+      }
+      $id++;
+    }
   }
   closedir $dh;
   return $pdocs;
 }
 
 sub load_data($;$) {
-  my $docs = load_processed_docs($_[0], $_[1]);
+  my $docs = load_processed_docs(@_, 1);
   my ($words, $words_ids);
   foreach my $doc ( values %$docs ) {
     while( my ($word_name,  $word_count) = each $doc->{words} ) {

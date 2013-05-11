@@ -1,6 +1,8 @@
 use utf8;
 
 {
+  lib_path => './lib',
+  
   # Docs parameters
   docs_path  => './docs',
   processed_docs_path  => './pdocs',

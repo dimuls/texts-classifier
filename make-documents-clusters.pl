@@ -17,6 +17,8 @@ use FART;
 
 my $conf = require 'conf.pl';
 
+my $docs = load_processed_docs($conf->{processed_docs_path}, $conf->{docs_limit}, 0);
+
 my $DT = mapfraw("$conf->{data_path}/document-term-model");
 
 my $art = new FART(
@@ -29,6 +31,10 @@ my $art = new FART(
 $art->input($DT);
 
 my $clusters = $art->output;
+
+foreach(keys %$clusters) {
+  $clusters->{$_} = [ map { $docs->{$_}->{name} } @{$clusters->{$_}} ];
+}
 
 say "Clusters count: ", scalar keys %$clusters;
 
