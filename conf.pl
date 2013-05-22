@@ -3,13 +3,16 @@ use utf8;
 {
   lib_path => './lib',
   
-  # Docs parameters
-  docs_path  => './docs',
-  processed_docs_path  => './pdocs',
-  docs_limit => undef,
+  # Paths
+      data_path => './data',
+  articles_path => './data/articles',
+      docs_path => './data/docs',
+       img_path => './data/img',
 
-  # Computed data files path
-  data_path => './data',
+  # Terms paramaters
+  term_docs_count_upper_limit => 20,
+  term_docs_count_lower_limit => 2,
+
 
   # Compund key generations paramaters
   frequency_classes_count => 4,

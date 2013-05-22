@@ -21,5 +21,4 @@ test*
 _Inline
 *.log
 *.swp
-docs-cannonical-classes.yaml
-docs.yaml
+old
